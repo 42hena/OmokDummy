@@ -1,0 +1,105 @@
+Login		[Client -> Server]
+accountNo(8) nickLen(1) nickName(2 * nickLen)|||| 보류 sessionKey[64]
+
+Login		[Server -> Client]
+accountNo(8) status(1) nickLen(1) nickName(2 * nickLen)
+
+shutdown	[Client -> Server]
+accountNo(8) room(2) position
+
+shutdown	[Server -> Client]
+accountNo room position flag
+
+CreateRoom 	[Client -> Server]
+accountNo(8)
+
+CreateRoom 	[Server -> Client]
+accountNo(8) roomNo(2)
+
+EnterRoom 	[Client -> Server]
+accountNo(8) roomNo(2)
+
+EnterRoom 	[Server -> Client]
+accountNo(8) roomNo(2) status(1)// 체팅방 or 게임중 or 실패
+
+EnterBroadCast	[Server -> Client]
+나 빼고 다 줌.
+
+EnterList	[Server -> Client]
+나한테 들어있는 리스트 다 줌.
+
+
+GetRoomList
+accountNo(8) page(1)
+
+GetRoomList
+accountNo(8) page(1) roomLen(1) USHORT(roomLen)
+
+LeaveRoom 	[Client -> Server]
+accountNo(8) roomNo(2)
+
+LeaveRoom 	[Server -> Client]
+accountNo(8) roomNo(2) status(1)	// 게임 시작 되서 실패, or 성공
+
+LeaveRoomBroadCast 	[Server -> Client]
+accountNo(8) roomNo(2) flag(1)
+나 빼고 다.
+
+Chatting [Client -> Server]
+accountNo(8) roomNo(2) nickLength(1) nickName(2*20) chatLength(1) chat[2 * 128];
+
+
+Chatting [Server -> Client]
+accountNo(8) roomNo(2) nickLength(1) nickName(2*20) chatLength(1) chat[2 * 128];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+====================================================================================================
+
+ChangePosition
+
+accountNo(8) roomNo(2) flag(1) from(1) to(1) nickLen(1) nickName(2*20)
+
+====================================================================================================
+
+Ready		[Client -> Server]	UniCast
+accountNo(8) roomNo(2) position(1)
+
+Ready		[Server -> Client]	BroadCast
+accountNo(8) roomNo(2) position(1) flag(1)
+
+CancelReady	[Client -> Server]	UniCast
+accountNo(8) roomNo(2) position(1)
+
+CancelReady	[Server -> Client]	BroadCast
+accountNo(8) roomNo(2) position(1) flag(1)
+
+StartGame	[Server -> Client]
+accountNo(8) roomNo(2) flag(1) turn(1)
+
+Putstone	[Client -> Server]
+accountNo(8) roomNo(2) position(1) x(1), y(1)
+
+Putstone	[Server -> Client]
+accountNo(8) roomNo(2) flag(1) position(1) x(1), y(1)
+
+GameOver	[Server -> Client]
+accountNo(8) roomId(2) position(1) nickLen(1) buf[20];
+
+GameOver Check	[Server -> Client]
+roomId(2) gameLen(1) [x(1) y(1)]* gameLen
+
+

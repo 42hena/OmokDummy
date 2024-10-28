@@ -135,6 +135,7 @@
     <ClInclude Include="CRBuffer.h" />
     <ClInclude Include="CSimpleAI.h" />
     <ClInclude Include="CState.h" />
+    <ClInclude Include="ini.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
@@ -143,6 +144,7 @@
     <ClCompile Include="Contents.cpp" />
     <ClCompile Include="CPacket.cpp" />
     <ClCompile Include="CProtocol.cpp" />
+    <ClCompile Include="CSimpleAI.cpp" />
     <ClCompile Include="CState.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="network.cpp" />

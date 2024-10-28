@@ -3,22 +3,44 @@
 #include <string>
 #include "CRBuffer.h"
 
+
+
 struct RoomInfo
 {
+	/*enum Color
+	{
+		None,
+		Black,
+		White
+	};*/
+
 	USHORT _curRoomNo;			// 방 번호
 	int _chatIdx;				// 내가 보낸 체팅의 index
 	int _board[15][15];			// 기억하고 있는 board판
-	int _bWeight[15][15];		// 흑색 가중치
-	int _wWeight[15][15];		// 백색 가중치
+	int _visited[15][15];
 	bool _turn;					// Black or White turn
-	BYTE _sendX, _sendY;		// 마지막에 보낸 위치
+	bool _color;					// Black or White
+	BYTE _sendX = 7, _sendY = 7;		// 마지막에 보낸 위치
 
 public:
+
+	void FindCandidates(int x, int y);
+
 	const USHORT GetCurrentRoomNo() const
 	{
 		return _curRoomNo;
 	}
 	
+	void SetColor(int color)
+	{
+		_color = color;
+	}
+
+	void ClearColor()
+	{
+		SetColor(0);
+	}
+
 	void MoveRoom(const USHORT roomNo)
 	{
 		_curRoomNo = roomNo;
@@ -46,9 +68,14 @@ public:
 		}
 	}
 
-	void PutStone(int y, int x, int position)
+	void PutStone(int x, int y, int position)
 	{
 		_board[y][x] = position;
+	}
+
+	int GetBoard(int x, int y)
+	{
+		return _board[y][x];
 	}
 };
 
@@ -71,9 +98,6 @@ public:
 		Error,
 		Exit
 	};
-
-
-	// -
 
 public:
 	CDummy();

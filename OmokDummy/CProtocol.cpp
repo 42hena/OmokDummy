@@ -189,6 +189,8 @@ void CProtocol::EnterRoomProcedure(CDummy* pDummy)
 	Start(pDummy, pPacket);
 }
 
+
+
 void CProtocol::ShutdownProcedure(CDummy* pDummy)
 {
 	CPacket* pPacket = MakeRequestShutdownPacket(pDummy);
@@ -612,9 +614,11 @@ CPacket* CProtocol::MakeRequestPutStone(CDummy* pDummy)
 		DebugBreak();
 		return nullptr;
 	}
-	x = rand() % 15;
-	y = rand() % 15;
-	*pStonePacket << accountNo << currentRoomNo << position << x << y;
+
+	pDummy->_roominfo.FindCandidates(pDummy->_roominfo._sendX, pDummy->_roominfo._sendY);
+	x = pDummy->_roominfo._sendX;
+	y = pDummy->_roominfo._sendY;
+	*pStonePacket << packetType << accountNo << currentRoomNo << position << x << y;
 	return pStonePacket;
 }
 
@@ -631,12 +635,71 @@ void CProtocol::RecvPutStone(CPacket* pPacket, CDummy* pDummy)
 	BYTE status;
 	BYTE position, recvX, recvY;
 	
-
 	*pPacket >> reccvAccountNo >> recvRoomNo >> status >> recvX >> recvY >> position;
 	pDummy->_roominfo._board[recvX][recvY] = position;
+	pDummy->_roominfo.PutStone(recvX, recvY, position);
+	pDummy->_roominfo._sendX = recvX;
+	pDummy->_roominfo._sendY = recvY;
+
+	if (status)
+	{
+		pDummy->_roominfo._turn = !pDummy->_roominfo._turn;
+	}
 	if (reccvAccountNo == pDummy->_accountNo)
 	{
-
 		End(pDummy);
 	}
+}
+
+void CProtocol::RecvGameOver(CPacket* pPacket, CDummy* pDummy)
+{
+	USHORT recvRoomNo;
+	*pPacket >> recvRoomNo;
+	if (pDummy->_roominfo.GetCurrentRoomNo() != recvRoomNo)
+	{
+		DebugBreak();
+	}
+	if (pDummy->_status == CDummy::en_Status::Black)
+	{
+		pDummy->_status = CDummy::en_Status::P1;
+	}
+	if (pDummy->_status == CDummy::en_Status::White)
+	{
+		pDummy->_status = CDummy::en_Status::P2;
+	}
+}
+
+void CProtocol::RecvGameOverCheck(CPacket* pPacket, CDummy* pDummy)
+{
+	USHORT recvRoomNo;
+	BYTE recvRecordCnt;
+	BYTE recvX, recvY;
+
+	
+	*pPacket >> recvRoomNo >> recvRecordCnt;
+
+	for (int i = 0; i < recvRecordCnt; ++i)
+	{
+		*pPacket >> recvX >> recvY;
+		int color = pDummy->_roominfo.GetBoard(recvX, recvY);
+		if (i & 0)
+		{
+			if (color != 1)
+			{
+				InterlockedIncrement(&pDummy->_waitFlag);
+			}
+		}
+		else
+		{
+			if (color != 2)
+			{
+				InterlockedIncrement(&pDummy->_waitFlag);
+			}
+		}
+	}
+
+	if (pDummy->_status == CDummy::en_Status::Black)
+		pDummy->_status = CDummy::en_Status::P1;
+	if (pDummy->_status == CDummy::en_Status::White)
+		pDummy->_status = CDummy::en_Status::P2;
 }

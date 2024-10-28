@@ -12,6 +12,9 @@ public:
 		en_RequestEnterRoom = 301,
 		en_ResponseEnterRoom = 302,
 
+
+		en_ResponseEnterAlarm = 305,
+
 		en_RequestLeaverRoom = 401,
 		en_ResponseLeaveRoom = 402,
 
@@ -34,6 +37,8 @@ public:
 
 		en_PutStoneRequest = 1108,
 		en_PutStoneResponse,
+		en_GameOver,
+		en_GameStatus,
 		//en_RequestRoomList = 13,
 		//en_ResponseRoomList = 14,
 
@@ -72,6 +77,7 @@ public:
 	static void LoginProcedure(CDummy*);
 	static void CreateRoomProcedure(CDummy*);
 	static void EnterRoomProcedure(CDummy*);
+
 	static void ShutdownProcedure(CDummy*);
 	static void LeaveRoomProcedure(CDummy*);
 	static void ChattingProcedure(CDummy*);
@@ -107,5 +113,9 @@ public:
 	static CPacket* MakeRequestPutStone(CDummy*);
 	static void PutStoneProcedure(CDummy*);
 	static void RecvPutStone(CPacket* pPacket, CDummy* pDummy);
+
+	// gameOver
+	static void RecvGameOver(CPacket* pPacket, CDummy* pDummy);
+	static void RecvGameOverCheck(CPacket* pPacket, CDummy* pDummy);
 };
 

@@ -136,6 +136,7 @@
     <ClInclude Include="CSimpleAI.h" />
     <ClInclude Include="CState.h" />
     <ClInclude Include="ini.h" />
+    <ClInclude Include="monitorTh.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
@@ -147,6 +148,7 @@
     <ClCompile Include="CSimpleAI.cpp" />
     <ClCompile Include="CState.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MonitorTh.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>

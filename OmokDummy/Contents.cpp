@@ -4,6 +4,10 @@
 
 extern int g_loginDelay;
 extern int g_actionDelay;
+extern int g_randDisconnect;
+extern int g_randContent;
+extern int g_randConnect;
+
 
 void InLogin(CDummy* pDummy)
 {
@@ -20,6 +24,7 @@ void InLogin(CDummy* pDummy)
 
 void InLobby(CDummy* pDummy)
 {
+	const int quitValue = 32767 * (100 - g_randDisconnect) / 100;
 	DWORD now = timeGetTime();
 
 	if (now <= pDummy->_lastUpdateTime + g_actionDelay)
@@ -27,27 +32,30 @@ void InLobby(CDummy* pDummy)
 		return;
 	}
 
-	int lobbyTypeCnt = 2;
-
-	int type = rand() % lobbyTypeCnt;
-	type = 0;
-	switch (type)
+	int type = rand();
+	if (type > quitValue)
 	{
-	case 0:	// EnterRoom
-		CProtocol::EnterRoomProcedure(pDummy);
-		pDummy->lastPacket = 11;
-		break;
-	case 1:	// CreateRoom
-		CProtocol::CreateRoomProcedure(pDummy);
-		pDummy->lastPacket = 12;
-		break;
-	case 2:	// Exit
 		CProtocol::ShutdownProcedure(pDummy);
-		break;
-		// case 3:	// GetLst
-	default:
-		DebugBreak();
-		break;
+		return;
+	}
+	else
+	{
+		//type = rand() % lobbyTypeCnt;
+		type = 0;
+		switch (type)
+		{
+		case 0:	// EnterRoom
+			CProtocol::EnterRoomProcedure(pDummy);
+			pDummy->lastPacket = 11;
+			break;
+		case 1:	// CreateRoom Not use In dummy
+			CProtocol::CreateRoomProcedure(pDummy);
+			pDummy->lastPacket = 12;
+			break;
+		default:
+			DebugBreak();
+			break;
+		}
 	}
 }
 
@@ -120,6 +128,7 @@ void ContentsP1(CDummy* pDummy)
 		break;
 	case 4:	// ready
 		CProtocol::ReadyProcedure(pDummy);
+		pDummy->lastPacket = 35;
 		break;
 	default:
 		DebugBreak();
@@ -159,6 +168,7 @@ void ContentsP2(CDummy* pDummy)
 		break;
 	case 4:
 		CProtocol::ReadyProcedure(pDummy);
+		pDummy->lastPacket = 45;
 		break;
 	default:
 		DebugBreak();

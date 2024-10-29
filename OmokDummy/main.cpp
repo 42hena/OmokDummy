@@ -15,12 +15,20 @@
 #include "CProtocol.h"
 #include "Contents.h"
 
+#include "monitorTh.h"
+
+#include "ini.h"
+
 int g_threadCnt = 1;
 int g_dummyCnt = 1;
 int g_overlapCnt;
 int g_kind;
 int g_loginDelay;
 int g_actionDelay;
+
+int g_randDisconnect;
+int g_randContent;
+int g_randConnect;
 
 int g_headerSize = 2;
 
@@ -40,51 +48,6 @@ alignas (64) uintptr_t g_echoCount;
 //alignas (64) uintptr_t g_totalTime;
 //alignas (64) uintptr_t g_totalCount;
 alignas (64) uintptr_t g_tttttt;
-
-
-unsigned int MonitoringThread(LPVOID param)
-{
-	int c = g_dummyCnt;
-	int t = g_threadCnt;
-	int waitCount = 0;
-	for (;;)
-	{
-		waitCount = 0;
-		int total = 0;
-		g_disconnectCnt = 0;
-		for (int i = 0; i < c * t; ++i)
-		{
-			total += g_dummy[i]._waitFlag;
-			g_disconnectCnt += g_dummy[i]._errorFlag;
-		}
-		printf("===================================================\n");
-		printf("Client: %d | Thread: %d | \n", c, t);
-		printf("===================================================\n");
-
-		printf("Wait Echo Count: %d\n", total);
-		//printf("Max Laytency: %dms\n\n", max);
-
-		printf("Connect\n");
-		printf("Connect Total : %llu\n", g_connectTotalCnt);
-		printf("Connect Success : %llu\n", g_connectSuccessCnt);
-
-		printf("Error\n");
-		printf("Connect Fail : %llu\n", g_connectFailCnt);
-		printf("Disconnect   : %llu\n", g_disconnectCnt);
-		printf("total packet : %llu\n", g_totalCnt);
-
-		printf("packet Use    : %d\n", CPacket::GetUseNode());
-		printf("AcceptPacket TPS: %llu\n", GetInitSendTPS());
-		printf("SendPacket TPS: %llu\n", GetInitSendTPS());
-		printf("RecvPacket TPS: %llu\n", GetInitRecvTPS());
-		printf("Avg%d Min%d Max%d\n", GetTotalAvgTime(), GetTotalMinTime(), GetTotalMaxTime());
-		printf("Avg%d Min%d Max%d\n", GetSecAvgTime(), GetSecMinTime(), GetSecMaxTime());
-;		printf("Check: %llu %llu\n", g_dddd, g_exitCount);
-		
-		Sleep(1000);
-	}
-}
-
 
 void RecvLogin(CPacket* pPacket, CDummy* pDummy)
 {
@@ -585,129 +548,34 @@ unsigned int ContentsThread(LPVOID param)
 
 void Input()
 {
-	printf("1. connect, 2. disconnect  XX\n");
-	scanf_s("%d", &g_kind);
+	inih::INIReader r{"./config.ini"};
 
-	wprintf(L"thread count Select\n"
-		"1. 1 th\n"
-		"2. 2 th\n"
-		"3. 10 th\n"
-		"4. 100 th\n");
-	scanf_s("%d", &g_kind);
-	switch (g_kind)
-	{
-	case 1:
-		g_threadCnt = 1;
-		break;
-	case 2:
-		g_threadCnt = 2;
-		break;
-	case 3:
-		g_threadCnt = 10;
-		break;
-	case 4:
-		g_threadCnt = 100;
-		break;
-	default:
-		DebugBreak();
-	}
+	const auto& threadNumber = r.Get<int>("dummy_client", "thread_number");
+	const auto& clientNumber = r.Get<int>("dummy_client", "client_number");
+	const auto& actionDelay = r.Get<int>("delay", "action_delay");
+	const auto& loginDelay = r.Get<int>("delay", "login_delay");
+	
+	const auto& randConnect = r.Get<int>("probability", "rand_connect");
+	const auto& randDisconnect = r.Get<int>("probability", "rand_disconnect");
+	const auto& randContent = r.Get<int>("probability", "rand_content");
 
-	wprintf(L"thread per client Select\n"
-		"1. 1 client\n"
-		"2. 2 client\n"
-		"3. 10 client\n"
-		"4. 50 client\n");
-	scanf_s("%d", &g_kind);
-	switch (g_kind)
-	{
-	case 1:
-		g_dummyCnt = 1;
-		break;
-	case 2:
-		g_dummyCnt = 2;
-		break;
-	case 3:
-		g_dummyCnt = 10;
-		break;
-	case 4:
-		g_dummyCnt = 50;
-		break;
-	default:
-		DebugBreak();
-	}
+	g_threadCnt = threadNumber;
+	g_dummyCnt = clientNumber;
+	g_actionDelay = actionDelay;
+	g_loginDelay = loginDelay;
 
+	g_randConnect = randConnect;
+	g_randDisconnect = randDisconnect;
+	g_randContent = randContent;
 
-	wprintf(L"Login Delay Select\n"
-		"1. 1000(ms)\n"
-		"2. 100(ms)\n"
-		"3. 10(ms)\n"
-		"4. 1(ms)\n"
-		"5. 0(ms)\n");
-	scanf_s("%d", &g_kind);
-	switch (g_kind)
-	{
-	case 1:
-		g_loginDelay = 1000;
-		break;
-	case 2:
-		g_loginDelay = 100;
-		break;
-	case 3:
-		g_loginDelay = 10;
-		break;
-	case 4:
-		g_loginDelay = 1;
-		break;
-	case 5:
-		g_loginDelay = 0;
-		break;
-	default:
-		DebugBreak();
-	}
+	const auto& chat = r.GetVector<std::wstring>("chatting", "1"); // ["1", "2", "3"]
 
-	wprintf(L"Action Delay Select\n"
-		"1. 1000(ms)\n"
-		"2. 100(ms)\n"
-		"3. 10(ms)\n"
-		"4. 1(ms)\n"
-		"5. 0(ms)\n");
-	scanf_s("%d", &g_kind);
-	switch (g_kind)
-	{
-	case 1:
-		g_actionDelay = 1000;
-		break;
-	case 2:
-		g_actionDelay = 100;
-		break;
-	case 3:
-		g_actionDelay = 10;
-		break;
-	case 4:
-		g_actionDelay = 1;
-		break;
-	case 5:
-		g_actionDelay = 0;
-		break;
-	default:
-		DebugBreak();
-	}
+	for (int i = 0 ; i < chat.size() ; ++i)
+		g_chat[i] = chat[i];
 }
 
 void Init()
 {
-	g_chat[0] = L"Hello!1";
-	g_chat[1] = L"Hello!2";
-	g_chat[2] = L"Hello!3";
-	g_chat[3] = L"Hello!4";
-	g_chat[4] = L"Hello!5";
-	g_chat[5] = L"Hello!6";
-	g_chat[6] = L"Hello!7";
-	g_chat[7] = L"Hello!8";
-	g_chat[8] = L"Hello!9";
-	g_chat[9] = L"Hello!0";
-
-
 	std::setlocale(LC_ALL, "ko_KR.UTF-8");
 	g_servAddr.sin_family = AF_INET;
 	InetPton(AF_INET, L"127.0.0.1", &g_servAddr.sin_addr);

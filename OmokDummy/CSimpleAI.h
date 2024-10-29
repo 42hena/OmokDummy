@@ -14,9 +14,9 @@ public:
 	// static member function
 	static inline bool IsValidPosition(int x, int y) { return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE; }
 	static inline bool isMoveValid(int board[][BOARD_SIZE], int x, int y) { return (IsValidPosition(x, y)) && board[y][x] == 0; }
-	static int FindOmokPattern(int board[][BOARD_SIZE], int x, int y, int type)
+	static int FindOmokPattern(int board[][BOARD_SIZE], int x, int y, int type, bool opp)
 	{
-		int cnt[5][2] = { {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0} };
+		int cnt[6][2] = { {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0} };
 		int total = 0;
 
 		// 4방향 검색.
@@ -86,69 +86,119 @@ public:
 				continue;
 
 			// 이김.6목도 이기는 판정.
-			if (sameCnt >= 5)
+			if (sameCnt > 5)
 			{
-				total += 1e6;
+				sameCnt = 5;
 			}
 
 			cnt[sameCnt][close]++;
 		}
 
-		return GetWeight(cnt) + posWeight[y][x];
+		if (opp)
+			return GetDefenseWeight(cnt) + posWeight[y][x];
+		else
+			return GetAttackWeight(cnt) + posWeight[y][x];
 	}
-	static int GetWeight(int cnt[5][2])
+	static int GetAttackWeight(int cnt[6][2])
 	{
-		if (cnt[4][0] >= 2)
-			return 1800;
-		else if (cnt[4][1] >= 1)
+		if (cnt[5][0] || cnt[5][1])	// 5
+			return 1'000'000;
+		else if (cnt[4][0] >= 2)	// 44
+			return 250'000;
+		else if (cnt[4][0] && cnt[3][0]) // 43
+			return 100'000;
+		else if (cnt[3][0] >= 2)		// 33
+			return 60'000;
+		else if (cnt[4][0])				// 4
 		{
-			if (cnt[3][1])
-				return 1700; // 4 3
-			return 1600;// 열린 4
+			if (cnt[4][1])				// 4
+				return 12000;
+			if (cnt[3][1])				// 3
+				return 10000;
 		}
-		else if (cnt[4][0] >= 1)
+		else if (cnt[4][1])				// close 4
 		{
-			if (cnt[3][1])
+			if (cnt[4][1] > 1)				// 4
 				return 1500;
-			else if (cnt[3][0])
-				return 1300;
-			return 1000;
+			if (cnt[3][1])				// 3
+				return 1000;
 		}
-		else if (cnt[3][1] >= 2)
+		else if (cnt[3][0])
 		{
-			return 900;
+			if (cnt[4][1])				// 4
+				return 900;
+			if (cnt[3][1])				// 3
+				return 850;
 		}
-		else if (cnt[3][1] >= 1)
+		else if (cnt[3][1])
 		{
+			if (cnt[4][1] > 1)				// 4
+				return 840;
+			if (cnt[3][1] > 0)				// 3
+				return 830;
+			if (cnt[2][0] || cnt[2][1])
+				return 820;
+		}
+		else if (cnt[2][0])
+		{
+			if (cnt[2][0] > 1)
+				return 500;
 			if (cnt[2][1])
-				return 420;
+				return 450;
 			return 400;
 		}
-		else if (cnt[3][0] >= 1)
+		return 100;
+	}
+
+	static int GetDefenseWeight(int cnt[6][2])
+	{
+		if (cnt[5][0] || cnt[5][1])	// 5
+			return 500'000;
+		else if (cnt[4][0] >= 2)	// 44
+			return 125'000;
+		else if (cnt[4][0] && cnt[3][0]) // 43
+			return 90'000;
+		else if (cnt[3][0] >= 2)		// 33
+			return 30'000;
+		else if (cnt[4][0])				// 4
 		{
-			return 60;
+			if (cnt[4][1])				// 4
+				return 11500;
+			if (cnt[3][1])				// 3
+				return 9500;
 		}
-		else if (cnt[2][1] >= 4)
+		else if (cnt[4][1])				// close 4
 		{
-			return 450;
+			if (cnt[4][1] > 1)				// 4
+				return 1450;
+			if (cnt[3][1])				// 3
+				return 950;
 		}
-		else if (cnt[2][1] >= 3)
+		else if (cnt[3][0])
 		{
-			return 430;
+			if (cnt[4][1])				// 4
+				return 890;
+			if (cnt[3][1])				// 3
+				return 840;
 		}
-		else if (cnt[2][1] >= 2)
+		else if (cnt[3][1])
 		{
-			return 60;
+			if (cnt[4][1] > 1)				// 4
+				return 835;
+			if (cnt[3][1] > 0)				// 3
+				return 825;
+			if (cnt[2][0] || cnt[2][1])
+				return 815;
 		}
-		else if (cnt[2][1] >= 1)
+		else if (cnt[2][0])
 		{
-			return 40;
+			if (cnt[2][0] > 1)
+				return 470;
+			if (cnt[2][1])
+				return 420;
+			return 380;
 		}
-		else if (cnt[2][0] >= 1)
-		{
-			return 30;
-		}
-		return 0;
+		return 50;
 	}
 
 	// static member variable

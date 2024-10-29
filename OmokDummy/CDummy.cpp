@@ -104,8 +104,8 @@ void RoomInfo::FindCandidates(int x, int y)
 	{
 		std::pair<int, int> cur = candiQ.front();
 		candiQ.pop();
-		int myValue = CSimpleAI::FindOmokPattern(_board, cur.first, cur.second, _color);
-		int oppValue = CSimpleAI::FindOmokPattern(_board, cur.first, cur.second, !_color);
+		int myValue = CSimpleAI::FindOmokPattern(_board, cur.first, cur.second, _color, false);
+		int oppValue = CSimpleAI::FindOmokPattern(_board, cur.first, cur.second, !_color, true);
 		
 		if (maxValue < max(myValue, oppValue))
 		{

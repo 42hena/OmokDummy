@@ -6,7 +6,7 @@ int g_addrSize;
 alignas (64) uintptr_t g_connectTotalCnt;
 alignas (64) uintptr_t g_connectSuccessCnt;
 alignas (64) uintptr_t g_connectFailCnt;
-alignas (64) uintptr_t g_disconnectCnt;
+//alignas (64) uintptr_t g_disconnectCnt;
 
 alignas (64) uintptr_t g_totalCnt;
 alignas (64) uintptr_t g_acceptCnt;

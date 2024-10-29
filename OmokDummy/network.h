@@ -7,7 +7,7 @@ extern int g_addrSize;
 extern alignas (64) uintptr_t g_connectTotalCnt;
 extern alignas (64) uintptr_t g_connectSuccessCnt;
 extern alignas (64) uintptr_t g_connectFailCnt;
-extern alignas (64) uintptr_t g_disconnectCnt;
+//extern alignas (64) uintptr_t g_disconnectCnt;
 extern alignas (64) uintptr_t g_totalCnt;
 extern alignas (64) uintptr_t g_acceptCnt;
 extern alignas (64) uintptr_t g_sendCnt;

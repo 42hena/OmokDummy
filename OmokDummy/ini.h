@@ -19,6 +19,9 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <codecvt>
+#pragma warning(disable : 4996) 
+
 
 namespace inih {
 
@@ -265,6 +268,9 @@ namespace inih {
         template <typename T>
         T Converter(const std::string& s) const;
 
+        template <typename T>
+        T Converter(const std::wstring& s) const;
+
         const bool BoolConverter(std::string s) const;
 
         template <typename T>
@@ -272,6 +278,43 @@ namespace inih {
 
         template <typename T>
         std::string Vec2String(const std::vector<T>& v) const;
+    private:
+
+    private:
+        template <typename T>
+        T ConvertFromStream(const std::string& s) const {
+            if constexpr (std::is_same<T, std::string>::value) {
+                return s; // std::string을 그대로 반환
+            }
+            try {
+                T v{};
+                std::istringstream stream{s};
+                stream.exceptions(std::ios::failbit);
+                stream >> v;
+                return v;
+            }
+            catch (...) {
+                throw std::runtime_error("Cannot parse value '" + s + "' to type<T>.");
+            }
+        }
+
+        // std::wstring을 처리하는 함수
+        template <typename T>
+        T ConvertFromStream(const std::wstring& s) const {
+            if constexpr (std::is_same<T, std::wstring>::value) {
+                return s; // std::wstring을 그대로 반환
+            }
+            try {
+                T v{};
+                std::wistringstream stream{s};
+                stream.exceptions(std::ios::failbit);
+                stream >> v;
+                return v;
+            }
+            catch (...) {
+                throw std::runtime_error("Cannot parse value '" + std::string(s.begin(), s.end()) + "' to type<T>.");
+            }
+        }
     };
 
 #endif  // __INIREADER_H__
@@ -376,7 +419,15 @@ namespace inih {
         try {
             std::vector<T> vs{};
             for (const std::string& s : strs) {
-                vs.emplace_back(Converter<T>(s));
+                /*vs.emplace_back(Converter<T>(s));*/
+                if constexpr (std::is_same<T, std::wstring>::value) {
+                    // Convert std::string to std::wstring
+                    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+                    vs.emplace_back(converter.from_bytes(s));
+                }
+                else {
+                    vs.emplace_back(Converter<T>(s));
+                }
             }
             return vs;
         }
@@ -459,7 +510,7 @@ namespace inih {
         return oss.str();
     }
 
-    template <typename T>
+    /*template <typename T>
     inline T INIReader::Converter(const std::string& s) const {
         try {
             T v{};
@@ -471,7 +522,25 @@ namespace inih {
         catch (std::exception& e) {
             throw std::runtime_error("cannot parse value '" + s + "' to type<T>.");
         };
+    }*/
+    template <typename T>
+    inline T INIReader::Converter(const std::string& s) const {
+        return ConvertFromStream<T>(s);
     }
+
+    // std::wstring을 위한 Converter 템플릿 특수화
+    template <typename T>
+    inline T INIReader::Converter(const std::wstring& s) const {
+        return ConvertFromStream<T>(s);
+    }
+    /*template <typename T>
+    inline T INIReader::Converter(const std::string& s) const {
+        return ConvertFromString<T>(s);
+    }
+    template <typename T>
+    inline T INIReader::Converter(const std::wstring& s) const {
+        return ConvertFromWString<T>(s);
+    }*/
 
     inline const bool INIReader::BoolConverter(std::string s) const {
         std::transform(s.begin(), s.end(), s.begin(), ::tolower);
@@ -503,23 +572,27 @@ namespace inih {
 
     class INIWriter {
     public:
-        INIWriter() {};
-        inline static void write(const std::string& filepath,
-            const INIReader& reader) {
-            if (struct stat buf; stat(filepath.c_str(), &buf) == 0) {
-                throw std::runtime_error("file: " + filepath + " already exist.");
+        INIWriter() {}
+
+        static void write(const std::string& filepath, const INIReader& reader) {
+            // C++14에서는 `if` 초기화 문법을 사용할 수 없으므로 분리
+            struct stat buf;
+            if (stat(filepath.c_str(), &buf) == 0) {
+                throw std::runtime_error("file: " + filepath + " already exists.");
             }
-            std::ofstream out;
-            out.open(filepath);
+
+            std::ofstream out(filepath);
             if (!out.is_open()) {
                 throw std::runtime_error("cannot open output file: " + filepath);
             }
+
             for (const auto& section : reader.Sections()) {
                 out << "[" << section << "]\n";
                 for (const auto& key : reader.Keys(section)) {
                     out << key << "=" << reader.Get(section, key) << "\n";
                 }
             }
+
             out.close();
         }
     };
